@@ -7,6 +7,7 @@ import { RadialColorBackground } from "@/components/radial-color-background";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/ui/navbar";
 import { PricingSection } from "@/components/pricing-table";
+import AnimatedBeamMultipleOutputDemo from "@/components/integrations-beam";
 
 export const PAYMENT_FREQUENCIES = ["monthly", "yearly"]
 
@@ -156,10 +157,15 @@ export default function Home() {
             <Button className="rounded-lg">Empieza ahora</Button>
           </div>
         </RadialColorBackground>
-        <RadialColorBackground gradient={gradientColorsIntegrations} className="h-[800px]" id="integrations">
-          <div className="flex flex-col items-center justify-center h-full">
-            <h1 className="text-7xl font-bold">Integraciones</h1>
-            <p className="text-lg">Integraciones con las mejores aplicaciones</p>
+        <RadialColorBackground gradient={gradientColorsIntegrations} className="h-[800px] w-full" id="integrations">
+          <div className="flex flex-row justify-center h-full w-full">
+            <div className="flex flex-col justify-center h-full">
+              <TextAnimate as="h2" className="text-7xl font-bold">Integraciones</TextAnimate>
+              <TextAnimate as="p" className="text-lg">Integraciones con las mejores aplicaciones</TextAnimate>
+            </div>
+            <div className="flex flex-col items-center justify-center">
+              <AnimatedBeamMultipleOutputDemo />
+            </div>
           </div>
         </RadialColorBackground>
         <RadialColorBackground gradient={gradientColorsPricing} className="h-[800px]" id="pricing">
