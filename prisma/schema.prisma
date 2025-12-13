@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  timezone  String   // "America/Argentina/Buenos_Aires"
+  createdAt DateTime @default(now())
+
+  reminders Reminder[]
+  messages  Message[]
+}
+
+model Reminder {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Campos para reminders-api.com
+  externalId      String?   @unique
+  title           String
+  dateTz          String    // "2024-12-15"
+  timeTz          String    // "09:45"
+  timezone        String
+  notifyInAdvance String?
+  rrule           String?
+  snoozed         Boolean   @default(false)
+
+  // Campos internos de Remi
+  notes           String?   // Nota adicional del usuario (si la hay)
+  messagePreview  String    // "Hey Mauro, recuerda comprarle la comida a tu pequeño 🐕"
+  status          String    @default("pending")
+
+  createdAt       DateTime  @default(now())
+  sentAt          DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([externalId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role      String   // "user" | "assistant"
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
