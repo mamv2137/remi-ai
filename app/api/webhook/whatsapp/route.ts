@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { WhatsAppClient } from '@kapso/whatsapp-cloud-api';
 import { prisma } from '@/lib/db'
 import { processMessage } from '@/lib/ai'
 import { getTimezoneFromPhone } from '@/lib/timezone'
 
+const WspClient = new WhatsAppClient({
+  baseUrl: 'https://api.kapso.ai/meta/whatsapp',
+  kapsoApiKey: process.env.KAPSO_API_KEY!
+});
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+
+    console.log('BODY__', body)
+
+    const messageBody = body?.message
     
-    const phone = body.from
-    const message = body.text
-    const pushName = body.pushName
+    const phone = messageBody.from
+    const message = messageBody?.text?.body
+    const pushName = body?.pushName || 'Usuario'
 
     if (!phone || !message) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
@@ -41,12 +51,35 @@ export async function POST(req: NextRequest) {
       userPhone: user.phone
     })
 
-    // 4. Guardar respuesta
-    await prisma.message.create({
-      data: { userId: user.id, role: 'assistant', content: responseText }
-    })
+    console.log('LLM Response:', responseText)
 
-    // 5. TODO: Enviar respuesta por Kapso
+    // 4. Guardar respuesta (solo si hay respuesta)
+    if (responseText && responseText.trim() !== '') {
+      await prisma.message.create({
+        data: { userId: user.id, role: 'assistant', content: responseText }
+      })
+    }
+
+    // 5. Enviar respuesta por Kapso
+    const phoneNumberId = process.env.KAPSO_PHONE_NUMBER_ID
+
+    if (!phoneNumberId) {
+      console.warn('KAPSO_PHONE_NUMBER_ID not configured, skipping WhatsApp send')
+    } else if (responseText && responseText.trim() !== '') {
+      try {
+        await WspClient.messages.sendText({
+          phoneNumberId,
+          to: phone, // Enviar al usuario que escribió
+          body: responseText
+        })
+        console.log(`Message sent to ${phone}:`, responseText)
+      } catch (error) {
+        console.error('Error sending WhatsApp message:', error)
+        // No lanzar error, continuar con la respuesta HTTP
+      }
+    } else {
+      console.log('No text response to send (tool call only)')
+    }
 
     return NextResponse.json({ success: true, response: responseText })
   } catch (error) {

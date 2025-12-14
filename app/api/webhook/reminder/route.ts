@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    console.log(body)
     const externalId = body.id // ID que envía reminders-api
 
     const reminder = await prisma.reminder.findUnique({
