@@ -16,10 +16,11 @@ export async function POST(req: NextRequest) {
     console.log('BODY__', body)
 
     const messageBody = body?.message
+    const conversation = body?.conversation
     
     const phone = messageBody.from
     const message = messageBody?.text?.body
-    const pushName = body?.pushName || 'Usuario'
+    const pushName = conversation?.contact_name || 'Usuario'
 
     if (!phone || !message) {
       return NextResponse.json({ error: 'Missing data' }, { status: 400 })
